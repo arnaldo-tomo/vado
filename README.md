@@ -1,56 +1,156 @@
-# Welcome to your Expo app 👋
+# Vado
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicação Android para calcular rapidamente **CIF** e **CFR** a partir do valor da factura.
 
-## Get started
+Introduza o valor, obtenha os dois resultados imediatamente, copie, partilhe ou guarde
+no histórico. Funciona inteiramente offline, sem conta e sem servidor.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Fórmulas
 
-2. Start the app
+| Valor | Fórmula             | Exemplo (factura `125 000,00 MZN`)     |
+| ----- | ------------------- | -------------------------------------- |
+| CIF   | `Factura ÷ divisor` | `125 000 ÷ 1,122` = `111 408,20`       |
+| Frete | `Factura × taxa`    | `125 000 × 2%` = `2 500,00`            |
+| CFR   | `CIF + Frete`       | `111 408,20 + 2 500,00` = `113 908,20` |
 
-   ```bash
-   npx expo start
-   ```
+O **divisor CIF** (`1.122`) e a **taxa de frete** (`2%`) são apenas valores por defeito
+— ambos são configuráveis em _Definições_ e nenhum está fixo na interface.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Stack
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- React Native `0.86` + Expo SDK `57`
+- TypeScript em modo `strict`
+- Expo Router (navegação por ficheiros, bottom tabs)
+- Zustand + AsyncStorage (estado e persistência local)
+- Lucide React Native (iconografia)
+- Inter (tipografia, quatro pesos)
+- Jest + ts-jest (testes da lógica de cálculo e formatação)
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## Instalação
+
+Requer Node 20+ e um dispositivo ou emulador Android.
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Execução
 
-### Other setup steps
+```bash
+npm start          # arranca o Metro; leia o QR code com o Expo Go
+npm run android    # abre directamente no emulador/dispositivo ligado
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Verificações
 
-## Learn more
+```bash
+npm test           # 44 testes: cálculo, formatação, definições, partilha
+npm run typecheck  # tsc --noEmit
+npm run lint       # ESLint (regras do React Compiler incluídas)
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Build Android
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+O objectivo é gerar um APK instalável directamente.
 
-## Join the community
+```bash
+npm install -g eas-cli
+eas login
+eas build -p android --profile preview
+```
 
-Join our community of developers creating universal apps.
+O perfil `preview` produz um **APK** (`buildType: apk`) pronto a instalar.
+O perfil `production` produz um **AAB** para a Play Store.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Campo       | Valor                  |
+| ----------- | ---------------------- |
+| Package     | `com.arnaldotomo.vado` |
+| Version     | `1.0.0`                |
+| VersionCode | `1`                    |
+
+---
+
+## Estrutura
+
+```text
+app/                   Rotas (Expo Router)
+  _layout.tsx          Fontes, splash, tema, toasts
+  onboarding.tsx       Introdução de duas telas, mostrada uma só vez
+  settings.tsx         Definições
+  about.tsx            Sobre, desenvolvedor, privacidade
+  (tabs)/
+    _layout.tsx        Bottom navigation
+    index.tsx          Calculadora (ecrã inicial)
+    history.tsx        Histórico e favoritos
+    incoterms.tsx      Explicação de CIF e CFR
+    more.tsx           Acesso a Definições e Sobre
+
+components/
+  ui/                  Primitivas: Text, Card, Button, BottomSheet, Toast…
+  calculator/          Campo da factura, cartões de resultado, detalhes
+  cards/               Item de histórico, cartão de Incoterm
+  layout/              Cabeçalhos e secções
+
+hooks/                 Tema, cálculo, haptics, partilha
+store/                 Zustand: definições, histórico, rascunho, app
+services/              Adaptador de AsyncStorage
+utils/                 calc.ts, format.ts, share.ts, id.ts
+constants/             theme.ts (tokens), defaults.ts, incoterms.ts, developer.ts
+types/                 Modelos partilhados
+assets/images/         Ícone, ícone adaptativo, splash, marca
+__tests__/             Testes da lógica pura
+```
+
+A lógica em `utils/` não importa nada de React Native — é por isso que pode ser
+testada directamente com `ts-jest`, sem emulador.
+
+---
+
+## Configuração
+
+### Contactos do desenvolvedor
+
+Preencha `constants/developer.ts`. Os campos vazios são tratados na interface
+(o ecrã _Sobre_ mostra "Por definir" em vez de abrir uma ligação inválida).
+
+```ts
+export const developer = {
+  name: 'Arnaldo Tomo',
+  role: 'Software Developer',
+  whatsapp: '', // apenas dígitos, com indicativo — ex.: '258840000000'
+  email: '',
+  website: '',
+};
+```
+
+### Valores por defeito
+
+`constants/defaults.ts` define a taxa de frete, o divisor CIF, a moeda, o tema,
+as casas decimais e os valores rápidos sugeridos. `LIMITS` define os intervalos
+aceites nas _Definições_.
+
+### Actualizações OTA
+
+`expo-updates` está instalado mas **desactivado** (`updates.enabled: false` em
+`app.config.ts`), para que a aplicação não contacte nenhum servidor. Basta
+activar a flag e associar um projecto EAS quando quiser distribuir correcções
+sem gerar um novo APK.
+
+---
+
+## Privacidade
+
+Todos os cálculos ficam guardados apenas no dispositivo, em AsyncStorage.
+A aplicação não pede permissões de runtime, não tem autenticação, não tem
+backend e não envia dados para lado nenhum.
+
+---
+
+Criado por **Arnaldo Tomo**
+Especialmente para **Rivaldo Tomo**.
