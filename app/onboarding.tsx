@@ -82,7 +82,7 @@ export default function OnboardingScreen() {
               source={MARK}
               style={styles.mark}
               contentFit="contain"
-              accessibilityLabel="Vado"
+              accessibilityLabel="Vadottt"
             />
             <Text variant="h1" style={styles.title}>
               {slide.title}
