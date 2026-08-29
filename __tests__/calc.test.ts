@@ -33,17 +33,25 @@ describe('calculateFreight', () => {
 });
 
 describe('calculateCfr', () => {
-  it('soma o CIF ao frete', () => {
-    expect(calculateCfr(100000, DIVISOR, RATE)).toBeCloseTo(91126.56, 2);
-    expect(calculateCfr(125000, DIVISOR, RATE)).toBeCloseTo(113908.2, 2);
+  it('divide a soma da factura com o frete', () => {
+    expect(calculateCfr(7000, DIVISOR, RATE)).toBeCloseTo(6363.64, 2);
+    expect(calculateCfr(100000, DIVISOR, RATE)).toBeCloseTo(90909.09, 2);
+    expect(calculateCfr(125000, DIVISOR, RATE)).toBeCloseTo(113636.36, 2);
   });
 
-  it('é sempre igual a CIF + frete para os mesmos parâmetros', () => {
+  it('o frete entra antes da divisão, não depois', () => {
     const invoice = 372450.75;
-    expect(calculateCfr(invoice, DIVISOR, RATE)).toBeCloseTo(
-      calculateCif(invoice, DIVISOR) + calculateFreight(invoice, RATE),
-      6
+    const freight = calculateFreight(invoice, RATE);
+
+    expect(calculateCfr(invoice, DIVISOR, RATE)).toBeCloseTo((invoice + freight) / DIVISOR, 6);
+    expect(calculateCfr(invoice, DIVISOR, RATE)).not.toBeCloseTo(
+      calculateCif(invoice, DIVISOR) + freight,
+      2
     );
+  });
+
+  it('devolve zero em vez de Infinity quando o divisor é zero', () => {
+    expect(calculateCfr(100000, 0, RATE)).toBe(0);
   });
 });
 
@@ -66,20 +74,20 @@ describe('roundTo', () => {
 });
 
 describe('calculate', () => {
-  it('devolve o conjunto completo com os valores do enunciado', () => {
+  it('devolve o conjunto completo', () => {
     expect(calculate(125000, DIVISOR, RATE)).toEqual({
       invoice: 125000,
       cif: 111408.2,
       freight: 2500,
-      cfr: 113908.2,
-      difference: 2500,
+      cfr: 113636.36,
+      difference: 2228.16,
     });
   });
 
-  it('mantém a diferença igual ao frete', () => {
+  it('a diferença é o frete já diluído pelo divisor', () => {
     const result = calculate(100000, DIVISOR, RATE);
-    expect(result.difference).toBe(result.freight);
-    expect(result.cfr).toBe(roundTo(result.cif + result.freight, 2));
+    expect(result.difference).toBe(roundTo(result.cfr - result.cif, 2));
+    expect(result.difference).toBeCloseTo(result.freight / DIVISOR, 2);
   });
 
   it('respeita o número de casas decimais configurado', () => {
@@ -88,7 +96,8 @@ describe('calculate', () => {
   });
 
   it('suporta valores grandes sem perder consistência', () => {
-    const result = calculate(999_999_999, DIVISOR, RATE);
-    expect(result.cfr).toBe(roundTo(result.cif + result.freight, 2));
+    const invoice = 999_999_999;
+    const result = calculate(invoice, DIVISOR, RATE);
+    expect(result.cfr).toBe(roundTo((invoice + result.freight) / DIVISOR, 2));
   });
 });

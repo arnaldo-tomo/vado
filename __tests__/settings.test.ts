@@ -15,7 +15,8 @@ describe('alterações das definições', () => {
 
     expect(higher.cif).toBe(base.cif);
     expect(higher.freight).toBe(5000);
-    expect(higher.cfr).toBe(base.cif + 5000);
+    expect(higher.cfr).toBeCloseTo((invoice + 5000) / DEFAULT_SETTINGS.cifDivisor, 2);
+    expect(higher.cfr).toBeGreaterThan(base.cfr);
   });
 
   it('um divisor diferente muda o CIF e o CFR, mas não o frete', () => {
@@ -24,7 +25,7 @@ describe('alterações das definições', () => {
 
     expect(other.freight).toBe(base.freight);
     expect(other.cif).toBeCloseTo(66666.67, 2);
-    expect(other.cfr).toBeCloseTo(68666.67, 2);
+    expect(other.cfr).toBeCloseTo(68000, 2);
   });
 
   it('taxa de 0% torna o CFR igual ao CIF', () => {

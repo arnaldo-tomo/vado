@@ -22,8 +22,15 @@ export function calculateFreight(invoice: number, rate: number): number {
   return invoice * (rate / 100);
 }
 
+/**
+ * O frete é somado à factura **antes** da divisão pelo divisor — não é
+ * acrescentado ao CIF depois. Ex.: 7000 -> (7000 + 140) ÷ 1,122 = 6363,64.
+ */
 export function calculateCfr(invoice: number, divisor: number, rate: number): number {
-  return calculateCif(invoice, divisor) + calculateFreight(invoice, rate);
+  if (!Number.isFinite(divisor) || divisor === 0) return 0;
+  const base = invoice + calculateFreight(invoice, rate);
+  if (!Number.isFinite(base)) return 0;
+  return base / divisor;
 }
 
 /** Calcula o conjunto completo, já arredondado para apresentação e persistência. */
@@ -35,7 +42,7 @@ export function calculate(
 ): CalculationResult {
   const cif = roundTo(calculateCif(invoice, divisor), decimals);
   const freight = roundTo(calculateFreight(invoice, rate), decimals);
-  const cfr = roundTo(cif + freight, decimals);
+  const cfr = roundTo(calculateCfr(invoice, divisor, rate), decimals);
   return {
     invoice: roundTo(invoice, decimals),
     cif,

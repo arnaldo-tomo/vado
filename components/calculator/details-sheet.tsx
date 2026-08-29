@@ -50,7 +50,16 @@ export function DetailsSheet({
         hint={`Factura × ${formatRate(calculation.freightRate)}`}
         value={money(calculation.freight)}
       />
-      <DetailRow label="CFR" hint="CIF + Frete" value={money(calculation.cfr)} strong />
+      <DetailRow
+        label="Factura + frete"
+        value={money(calculation.invoice + calculation.freight)}
+      />
+      <DetailRow
+        label="CFR"
+        hint={`(Factura + Frete) ÷ ${formatDivisor(calculation.cifDivisor)}`}
+        value={money(calculation.cfr)}
+        strong
+      />
 
       <View style={[styles.formulas, { backgroundColor: colors.surfaceMuted }]}>
         <Text variant="caption" tone="secondary" style={styles.formulaTitle}>
@@ -63,7 +72,7 @@ export function DetailsSheet({
           Frete = Factura × {formatRate(calculation.freightRate)}
         </Text>
         <Text variant="small" tabular style={styles.formula}>
-          CFR = CIF + Frete
+          CFR = (Factura + Frete) ÷ {formatDivisor(calculation.cifDivisor)}
         </Text>
       </View>
 
