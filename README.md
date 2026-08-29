@@ -147,8 +147,13 @@ sem gerar um novo APK.
 ## Privacidade
 
 Todos os cálculos ficam guardados apenas no dispositivo, em AsyncStorage.
-A aplicação não pede permissões de runtime, não tem autenticação, não tem
-backend e não envia dados para lado nenhum.
+A aplicação não tem autenticação, não tem backend e não envia dados para lado
+nenhum.
+
+A única permissão declarada é `INTERNET` — é uma permissão *normal* (não pede
+consentimento ao utilizador) e é exigida pelo dev client do Expo. As permissões
+de armazenamento que o Expo declara por omissão estão explicitamente bloqueadas
+em `app.config.ts`.
 
 ---
 
