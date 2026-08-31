@@ -131,7 +131,8 @@ export const developer = {
 
 ### Valores por defeito
 
-`constants/defaults.ts` define a taxa de frete, o divisor CIF, a moeda, o tema,
+`constants/currencies.ts` define as moedas disponíveis (MZN, USD, ZAR, EUR, CNY,
+JPY). `constants/defaults.ts` define a taxa de frete, o divisor CIF, a moeda, o tema,
 as casas decimais e os valores rápidos sugeridos. `LIMITS` define os intervalos
 aceites nas _Definições_.
 
