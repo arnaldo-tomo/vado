@@ -14,9 +14,9 @@ describe('fórmula CIF / CFR', () => {
   const RATE = 2;
 
   it('o CIF é só a factura dividida — confirmado, não mexer', () => {
-    expect(calculateCif(7000, divisor)).toBeCloseTo(6238.86, 2);
-    expect(calculateCif(125000, divisor)).toBeCloseTo(111408.2, 2);
-    expect(calculate(7000, divisor, RATE).cif).toBe(6238.86);
+    expect(calculateCif(7000, divisor)).toBeCloseTo(6238.85918, 5);
+    expect(calculateCif(125000, divisor)).toBeCloseTo(111408.19964, 5);
+    expect(calculate(7000, divisor, RATE).cif).toBe(6238.85);
   });
 
   it('reproduz o exemplo escrito à mão: 7.000 USD', () => {
@@ -25,7 +25,8 @@ describe('fórmula CIF / CFR', () => {
     expect(calculateFreight(invoice, RATE)).toBe(140);
     expect(invoice + calculateFreight(invoice, RATE)).toBe(7140);
     expect(calculateCfr(invoice, divisor, RATE)).toBeCloseTo(6363.636364, 5);
-    expect(calculate(invoice, divisor, RATE).cfr).toBe(6363.64);
+    // 6363,6363… cortado, tal como a máquina do escritório mostra.
+    expect(calculate(invoice, divisor, RATE).cfr).toBe(6363.63);
   });
 
   it('CFR é a soma dividida, não o CIF mais o frete', () => {
