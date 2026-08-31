@@ -1,5 +1,11 @@
 import { DEFAULT_SETTINGS } from '@/constants/defaults';
-import { calculate, calculateCfr, calculateCif, calculateFreight, roundTo } from '@/utils/calc';
+import {
+  calculate,
+  calculateCfr,
+  calculateCif,
+  calculateFreight,
+  truncateTo,
+} from '@/utils/calc';
 
 const { cifDivisor: DIVISOR, freightRate: RATE } = DEFAULT_SETTINGS;
 
@@ -55,21 +61,25 @@ describe('calculateCfr', () => {
   });
 });
 
-describe('roundTo', () => {
-  it('arredonda para o número de casas pedido', () => {
-    expect(roundTo(89126.5597, 2)).toBe(89126.56);
-    expect(roundTo(89126.5597, 0)).toBe(89127);
-    expect(roundTo(89126.5597, 4)).toBe(89126.5597);
+describe('truncateTo', () => {
+  it('corta, não arredonda', () => {
+    expect(truncateTo(89126.5597, 2)).toBe(89126.55);
+    expect(truncateTo(89126.5597, 0)).toBe(89126);
+    expect(truncateTo(89126.5597, 4)).toBe(89126.5597);
+    expect(truncateTo(6363.636363, 2)).toBe(6363.63);
   });
 
-  it('não propaga artefactos de vírgula flutuante', () => {
-    expect(roundTo(0.1 + 0.2, 2)).toBe(0.3);
-    expect(roundTo(1.005, 2)).toBe(1.01);
+  it('não corta um cêntimo a mais por erro de vírgula flutuante', () => {
+    // 0.29 * 100 dá 28,999999999999996 em binário; cortar às cegas daria 0,28.
+    expect(truncateTo(0.29, 2)).toBe(0.29);
+    expect(truncateTo(1.15, 2)).toBe(1.15);
+    expect(truncateTo(8.7, 2)).toBe(8.7);
+    expect(truncateTo(0.1 + 0.2, 2)).toBe(0.3);
   });
 
   it('trata valores não finitos como zero', () => {
-    expect(roundTo(Number.NaN, 2)).toBe(0);
-    expect(roundTo(Number.POSITIVE_INFINITY, 2)).toBe(0);
+    expect(truncateTo(Number.NaN, 2)).toBe(0);
+    expect(truncateTo(Number.POSITIVE_INFINITY, 2)).toBe(0);
   });
 });
 
@@ -77,27 +87,28 @@ describe('calculate', () => {
   it('devolve o conjunto completo', () => {
     expect(calculate(125000, DIVISOR, RATE)).toEqual({
       invoice: 125000,
-      cif: 111408.2,
+      cif: 111408.19,
       freight: 2500,
       cfr: 113636.36,
-      difference: 2228.16,
+      difference: 2228.17,
     });
   });
 
   it('a diferença é o frete já diluído pelo divisor', () => {
     const result = calculate(100000, DIVISOR, RATE);
-    expect(result.difference).toBe(roundTo(result.cfr - result.cif, 2));
-    expect(result.difference).toBeCloseTo(result.freight / DIVISOR, 2);
+    expect(result.difference).toBe(truncateTo(result.cfr - result.cif, 2));
+    // Aproximado, não exacto: CIF e CFR são cortados de forma independente.
+    expect(result.difference).toBeCloseTo(result.freight / DIVISOR, 1);
   });
 
   it('respeita o número de casas decimais configurado', () => {
-    expect(calculate(100000, DIVISOR, RATE, 0).cif).toBe(89127);
+    expect(calculate(100000, DIVISOR, RATE, 0).cif).toBe(89126);
     expect(calculate(100000, DIVISOR, RATE, 4).cif).toBe(89126.5597);
   });
 
   it('suporta valores grandes sem perder consistência', () => {
     const invoice = 999_999_999;
     const result = calculate(invoice, DIVISOR, RATE);
-    expect(result.cfr).toBe(roundTo((invoice + result.freight) / DIVISOR, 2));
+    expect(result.cfr).toBe(truncateTo((invoice + result.freight) / DIVISOR, 2));
   });
 });
