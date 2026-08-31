@@ -1,15 +1,19 @@
 import type { CalculationResult } from '@/types';
 
 /**
- * Arredonda para um número fixo de casas evitando os artefactos habituais
- * de vírgula flutuante (ex.: 1.005 -> 1.00 em vez de 1.01).
+ * Corta nas casas pedidas **sem arredondar**, como a calculadora usada no
+ * escritório: 6363,6363… -> 6363,63 (e não 6363,64).
+ *
+ * A correcção do `scaled` é necessária porque em vírgula flutuante
+ * `0.29 * 100` dá 28,999999999999996 — cortar directamente daria 0,28.
  */
-export function roundTo(value: number, decimals: number): number {
+export function truncateTo(value: number, decimals: number): number {
   if (!Number.isFinite(value)) return 0;
   const factor = 10 ** decimals;
-  return (
-    Math.round((value + Number.EPSILON * Math.sign(value) * Math.abs(value)) * factor) / factor
-  );
+  const scaled = value * factor;
+  const nearest = Math.round(scaled);
+  const corrected = Math.abs(scaled - nearest) < 1e-9 ? nearest : scaled;
+  return Math.trunc(corrected) / factor;
 }
 
 export function calculateCif(invoice: number, divisor: number): number {
@@ -33,21 +37,21 @@ export function calculateCfr(invoice: number, divisor: number, rate: number): nu
   return base / divisor;
 }
 
-/** Calcula o conjunto completo, já arredondado para apresentação e persistência. */
+/** Calcula o conjunto completo, já cortado para apresentação e persistência. */
 export function calculate(
   invoice: number,
   divisor: number,
   rate: number,
   decimals = 2
 ): CalculationResult {
-  const cif = roundTo(calculateCif(invoice, divisor), decimals);
-  const freight = roundTo(calculateFreight(invoice, rate), decimals);
-  const cfr = roundTo(calculateCfr(invoice, divisor, rate), decimals);
+  const cif = truncateTo(calculateCif(invoice, divisor), decimals);
+  const freight = truncateTo(calculateFreight(invoice, rate), decimals);
+  const cfr = truncateTo(calculateCfr(invoice, divisor, rate), decimals);
   return {
-    invoice: roundTo(invoice, decimals),
+    invoice: truncateTo(invoice, decimals),
     cif,
     freight,
     cfr,
-    difference: roundTo(cfr - cif, decimals),
+    difference: truncateTo(cfr - cif, decimals),
   };
 }
