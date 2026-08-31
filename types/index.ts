@@ -1,4 +1,4 @@
-export type CurrencyCode = 'MZN' | 'USD' | 'ZAR' | 'EUR';
+export type CurrencyCode = 'MZN' | 'USD' | 'ZAR' | 'EUR' | 'CNY' | 'JPY';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 
