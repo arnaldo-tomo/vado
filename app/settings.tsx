@@ -7,6 +7,7 @@ import { Section } from '@/components/layout/section';
 import { StackHeader } from '@/components/layout/stack-header';
 import {
   Card,
+  Chip,
   ConfirmDialog,
   Divider,
   ListRow,
@@ -15,13 +16,13 @@ import {
   SettingField,
   useToast,
 } from '@/components/ui';
-import { CURRENCIES } from '@/constants/currencies';
+import { CURRENCIES, currencyLabel } from '@/constants/currencies';
 import { DEFAULT_SETTINGS, LIMITS } from '@/constants/defaults';
 import { spacing } from '@/constants/theme';
 import { useHaptics } from '@/hooks/use-haptics';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/store/settings';
-import type { CurrencyCode, ThemeMode } from '@/types';
+import type { ThemeMode } from '@/types';
 import { formatDivisor, formatRate } from '@/utils/format';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -31,8 +32,6 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 ];
 
 const DECIMAL_OPTIONS = ['0', '1', '2', '3', '4'].map((value) => ({ value, label: value }));
-
-const CURRENCY_OPTIONS = CURRENCIES.map(({ code }) => ({ value: code, label: code }));
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -92,13 +91,22 @@ export default function SettingsScreen() {
           </Card>
         </Section>
 
-        <Section title="Moeda" footnote={`Os valores passam a ser apresentados em ${currency}.`}>
-          <SegmentedControl
-            options={CURRENCY_OPTIONS}
-            value={currency}
-            onChange={(value) => update('currency', value as CurrencyCode)}
-            accessibilityLabel="Moeda"
-          />
+        <Section
+          title="Moeda"
+          footnote={`Os valores passam a ser apresentados em ${currency} — ${currencyLabel(currency)}.`}
+        >
+          {/* Chips com quebra de linha: seis códigos não cabem lado a lado. */}
+          <View style={styles.currencies} accessibilityRole="radiogroup">
+            {CURRENCIES.map(({ code, label }) => (
+              <Chip
+                key={code}
+                label={code}
+                selected={code === currency}
+                onPress={() => update('currency', code)}
+                accessibilityLabel={`${label} (${code})`}
+              />
+            ))}
+          </View>
         </Section>
 
         <Section title="Aparência">
@@ -171,6 +179,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.lg },
+  currencies: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   decimals: { paddingBottom: spacing.lg },
   decimalsControl: { paddingHorizontal: spacing.lg },
 });
