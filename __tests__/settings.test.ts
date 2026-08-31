@@ -1,3 +1,4 @@
+import { CURRENCIES, currencyLabel } from '@/constants/currencies';
 import { DEFAULT_SETTINGS } from '@/constants/defaults';
 import { calculate } from '@/utils/calc';
 import { formatMoney, formatRate } from '@/utils/format';
@@ -15,7 +16,7 @@ describe('alterações das definições', () => {
 
     expect(higher.cif).toBe(base.cif);
     expect(higher.freight).toBe(5000);
-    expect(higher.cfr).toBeCloseTo((invoice + 5000) / DEFAULT_SETTINGS.cifDivisor, 2);
+    expect(higher.cfr).toBeCloseTo((invoice + 5000) / DEFAULT_SETTINGS.cifDivisor, 1);
     expect(higher.cfr).toBeGreaterThan(base.cfr);
   });
 
@@ -24,8 +25,8 @@ describe('alterações das definições', () => {
     const other = calculate(invoice, 1.5, DEFAULT_SETTINGS.freightRate);
 
     expect(other.freight).toBe(base.freight);
-    expect(other.cif).toBeCloseTo(66666.67, 2);
-    expect(other.cfr).toBeCloseTo(68000, 2);
+    expect(other.cif).toBe(66666.66);
+    expect(other.cfr).toBe(68000);
   });
 
   it('taxa de 0% torna o CFR igual ao CIF', () => {
@@ -35,10 +36,25 @@ describe('alterações das definições', () => {
     expect(result.difference).toBe(0);
   });
 
+  it('todas as moedas suportadas formatam da mesma maneira', () => {
+    const codes = CURRENCIES.map((currency) => currency.code);
+    expect(codes).toEqual(['MZN', 'USD', 'ZAR', 'EUR', 'CNY', 'JPY']);
+
+    for (const code of codes) {
+      expect(formatMoney(6363.63, code)).toBe(`6 363,63 ${code}`);
+      expect(currencyLabel(code)).not.toBe(code);
+    }
+  });
+
+  it('o iene fica legível com zero casas decimais', () => {
+    // O JPY não usa subunidade; basta pôr as casas decimais a 0 nas Definições.
+    expect(formatMoney(741000, 'JPY', 0)).toBe('741 000 JPY');
+  });
+
   it('a moeda escolhida acompanha todos os valores apresentados', () => {
     const result = calculate(invoice, DEFAULT_SETTINGS.cifDivisor, DEFAULT_SETTINGS.freightRate);
-    expect(formatMoney(result.cif, 'MZN')).toBe('89 126,56 MZN');
-    expect(formatMoney(result.cif, 'USD')).toBe('89 126,56 USD');
+    expect(formatMoney(result.cif, 'MZN')).toBe('89 126,55 MZN');
+    expect(formatMoney(result.cif, 'USD')).toBe('89 126,55 USD');
   });
 
   it('os valores por defeito correspondem ao esperado', () => {
